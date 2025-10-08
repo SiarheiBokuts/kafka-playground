@@ -1,0 +1,7 @@
+docker exec --workdir /opt/kafka/bin/ -it kafka_playground_kafka sh
+
+
+
+./kafka-console-producer.sh --bootstrap-server localhost:9092 --topic first_topic
+
+./kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic first_topic --from-beginning
