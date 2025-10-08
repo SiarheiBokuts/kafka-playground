@@ -48,10 +48,12 @@ async function runKafka() {
   // consumer
 
   //   producer
-  await producer.send({
-    topic: "test-topic",
-    messages: [{ value: "Hello Kafka KRaft!" }],
-  });
+  setInterval(async () => {
+    await producer.send({
+      topic: "test-topic",
+      messages: [{ value: `Hello Kafka! ${new Date().toISOString()}` }],
+    });
+  }, 2000);
 }
 
 export { runKafka };
