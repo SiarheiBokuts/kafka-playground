@@ -12,70 +12,90 @@ dotenv.config();
 const app: Express = express();
 const port = process.env.PORT || 3000;
 
-// The GraphQL schema
+// === GraphQL Schema & Resolvers ===
 const typeDefs = `#graphql
   type Query {
     hello: String
   }
 `;
 
-// A map of functions which return data for the schema.
 const resolvers = {
   Query: {
     hello: () => "world",
   },
 };
 
+// === HTTP Server for Apollo ===
 const httpServer = http.createServer(app);
 
-// Set up Apollo Server
+// === Apollo Server Setup ===
 const server = new ApolloServer({
   typeDefs,
   resolvers,
   plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
 });
 
-// JSON middleware для body
+// === Middleware ===
+app.use(cors());
 app.use(express.json());
 
-// Роут для получения событий с фронта
+// Debug middleware for incoming HTTP requests
+app.use((req, _res, next) => {
+  console.log(`[HTTP] ${req.method} ${req.url} Body:`, req.body);
+  next();
+});
+
+// === REST Route to receive events from frontend ===
 app.post("/events", async (req: Request, res: Response) => {
+  const event = req.body;
+
+  if (!event) {
+    return res.status(400).json({ message: "Event body is required" });
+  }
+
   try {
-    const event = req.body;
-
-    if (!event) {
-      return res.status(400).json({ message: "Event body is required" });
-    }
-
-    // Отправляем событие в Kafka
     await kafkaService.sendEvent(USER_EVENTS_TOPIC, event);
-
+    console.log("[Kafka] Event sent:", event);
     return res.status(200).json({ message: "Event sent to Kafka" });
   } catch (err) {
-    console.error("Failed to send event to Kafka:", err);
+    console.error("[Kafka] Failed to send event:", err);
     return res.status(500).json({ message: "Internal Server Error" });
   }
 });
 
-app.listen(port, async () => {
-  await kafkaService.init();
-  await kafkaService.startConsumer(
-    USER_EVENTS_TOPIC,
-    async ({ topic, partition, value }) => {
-      console.log(
-        `consumer works on Topic: ${topic} | Partition: ${partition} | Message: ${value}`
-      );
+// === Server Initialization ===
+async function startServer() {
+  try {
+    // Init Kafka
+    await kafkaService.init();
+    await kafkaService.startConsumer(
+      USER_EVENTS_TOPIC,
+      async ({ topic, partition, value }) => {
+        console.log(
+          `[Kafka] Topic: ${topic} | Partition: ${partition} | Message: ${value}`
+        );
+        try {
+          const event = JSON.parse(value);
+          console.log("[Kafka] Parsed event:", event);
+        } catch (err) {
+          console.error("[Kafka] Failed to parse event:", err);
+        }
+      }
+    );
 
-      const event = JSON.parse(value);
-      console.log("Received event:", event);
-    }
-  );
+    debugger
+    // Start Apollo Server
+    await server.start();
+    app.use(expressMiddleware(server));
 
-  await server.start();
+    // Start HTTP server
+    httpServer.listen(port, () => {
+      console.log(`⚡️ Server running at http://localhost:${port}`);
+    });
+  } catch (err) {
+    console.error("Failed to start server:", err);
+    process.exit(1);
+  }
+}
 
-  app.use(cors(), express.json(), expressMiddleware(server));
-
-  console.log(`⚡️[server]: Server is running at https://localhost:${port}`);
-});
-
-// kafkaService.startDebug().catch(console.error);
+startServer();
