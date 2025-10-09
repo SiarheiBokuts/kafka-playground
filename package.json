@@ -13,7 +13,8 @@
     "start": "node dist/index.js",
     "test": "yarn jest --verbose",
     "test:coverage": "yarn jest --coverage",
-    "lint": "eslint --config eslint.config.mjs"
+    "lint": "eslint --config eslint.config.mjs",
+    "pretify": "prettier --write ."
   },
   "dependencies": {
     "@types/bluebird": "^3.5.36",
@@ -23,6 +24,7 @@
     "dotenv": "^17.2.1",
     "express": "^5.1.0",
     "kafkajs": "^2.2.4",
+    "prettier": "^3.6.2",
     "typescript": "^5.9.2"
   },
   "devDependencies": {
