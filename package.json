@@ -17,18 +17,23 @@
     "pretify": "prettier --write ."
   },
   "dependencies": {
+    "@apollo/server": "^5.0.0",
+    "@as-integrations/express5": "^1.1.2",
     "@types/bluebird": "^3.5.36",
     "@types/express": "^5.0.3",
     "axios": "^1.11.0",
     "bluebird": "^3.7.2",
+    "cors": "^2.8.5",
     "dotenv": "^17.2.1",
     "express": "^5.1.0",
+    "graphql": "^16.11.0",
     "kafkajs": "^2.2.4",
     "prettier": "^3.6.2",
     "typescript": "^5.9.2"
   },
   "devDependencies": {
     "@eslint/js": "^9.33.0",
+    "@types/cors": "^2.8.19",
     "@types/jest": "^30.0.0",
     "eslint": "^9.33.0",
     "jest": "^30.0.5",
