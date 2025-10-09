@@ -1,5 +1,9 @@
 import { Kafka, Producer, Consumer, Admin } from "kafkajs";
 
+const APP_GROUP_ID = "kafka-playground-app";
+// Session timeout in ms — the time after which the broker considers the consumer dead.
+// Decreased from the default 30000 to 6000 for faster consumer startup during local development.
+const CONSUME_SESSION_TIMEOUT = 6000; // in ms
 export const USER_EVENTS_TOPIC = "user-events";
 
 class KafkaService {
@@ -16,7 +20,10 @@ class KafkaService {
     });
 
     this.producer = this.kafka.producer();
-    this.consumer = this.kafka.consumer({ groupId: USER_EVENTS_TOPIC });
+    this.consumer = this.kafka.consumer({
+      groupId: APP_GROUP_ID,
+      sessionTimeout: CONSUME_SESSION_TIMEOUT,
+    });
     this.admin = this.kafka.admin();
   }
 
@@ -55,7 +62,7 @@ class KafkaService {
     this.consumer.run({
       eachMessage: async ({ topic, partition, message }) => {
         console.log(
-          `Topic: ${topic} | Partition: ${partition} | Message: ${message.value?.toString()}`,
+          `Topic: ${topic} | Partition: ${partition} | Message: ${message.value?.toString()}`
         );
       },
     });
@@ -73,7 +80,7 @@ class KafkaService {
       topic: string;
       partition: number;
       value: string;
-    }) => Promise<void> | void,
+    }) => Promise<void> | void
   ) {
     try {
       await this.consumer.subscribe({ topic, fromBeginning: true });
@@ -87,7 +94,7 @@ class KafkaService {
               await onMessage({ topic, partition, value });
             } else {
               console.log(
-                `Topic: ${topic} | Partition: ${partition} | Message: ${value}`,
+                `Topic: ${topic} | Partition: ${partition} | Message: ${value}`
               );
             }
           } catch (err) {
@@ -103,7 +110,7 @@ class KafkaService {
 
   public async sendEvent(
     topic: string,
-    event: Record<string, unknown>,
+    event: Record<string, unknown>
   ): Promise<void> {
     try {
       await this.producer.send({

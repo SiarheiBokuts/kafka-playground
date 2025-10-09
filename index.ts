@@ -83,7 +83,6 @@ async function startServer() {
       }
     );
 
-    debugger
     // Start Apollo Server
     await server.start();
     app.use(expressMiddleware(server));
